@@ -1,0 +1,44 @@
+version: "3"
+
+services:
+  trash-email-service:
+    build: ./TrashEmailService
+    networks:
+      - trash-email-network
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./DB:/opt/TrashEmailService/DB:rw"
+    restart: on-failure
+    environment:
+      - SPRING_PROFILES_ACTIVE
+    depends_on:
+      - mysql
+
+  emails-to-telegram-service:
+    build: ./EmailsToTelegramService
+    networks:
+      - trash-email-network
+    restart: on-failure
+    depends_on:
+      - trash-email-service
+    volumes:
+      - "/tmp:/opt/EmailsToTelegramService/mails/:rw"
+    environment:
+      - SPRING_PROFILES_ACTIVE
+
+  mysql:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'trashemail'
+      MYSQL_ROOT_PASSWORD: changeme 
+    volumes:
+      - "../trashemail-mysql-data-dir:/var/lib/mysql:rw"
+    networks:
+      - trash-email-network
+
+
+networks:
+  trash-email-network:
+
